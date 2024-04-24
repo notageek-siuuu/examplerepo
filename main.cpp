@@ -9,19 +9,17 @@
 
 
 /////////////// objects ///////////////
-N5110 lcd;
-Joystick joy;
-ImpossEngine imposs;
-int level;
-int ball_x_pos;
-int ball_y_pos;
+N5110 lcd(PC_7, PA_9, PB_10, PB_5, PB_3, PA_10);
+Joystick joystick(PC_1, PC_0);
+DigitalIn buttonA(BUTTON1); //onboard user button
+
 
 ///////////// prototypes ///////////////
 void init();
-void update_game(UserInput input);
 void render();
 void welcome();
 void start_menu();
+void wait();
 
 ///////////// functions ////////////////
 
@@ -32,17 +30,17 @@ int main()
 
     init();     // initialise and then display welcome screen...
     welcome();  // waiting for the user to start
-    imposs.complete(lcd); // brings up start menu for user to select option
+    // brings up start menu for user to select option
     render();  // first draw the initial frame 
-    wait(1.0f/fps);  // and wait for one frame period
+      // and wait for one frame period
 
 
     // game loop - read input, update the game state and render the display
     while (1) {
         
-        imposs.update(lcd);
+      
         render();
-        wait(1.0f/fps);
+        
     }
 }
 
@@ -52,7 +50,7 @@ void render()
 {
     // clear screen, re-draw and refresh
     lcd.clear();  
-    imposs.draw(lcd);
+    
     lcd.refresh();
 }
 
@@ -71,11 +69,9 @@ void welcome() {
     
 
 
-
-void init()
-{
-    // need to initialise LCD and Gamepad 
-    lcd.init();
-    Joystick*init();
-
+void init() {
+    lcd.init(LPH7366_1);
+    lcd.setContrast(0.5);
+    joystick.init();
+         // paddle x position, paddle_height,paddle_width,ball_size,speed
 }
