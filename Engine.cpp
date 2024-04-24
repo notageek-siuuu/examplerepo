@@ -1,88 +1,166 @@
 #include "ImpossEngine.h"
 
 
-PongEngine::PongEngine(){ _lives = 4; }    
+ImpossEngine::ImpossEngine()
+{
 
-void PongEngine::init(int paddle_position, int paddle_height, int paddle_width, int ball_size, int speed){
-    //printf("Pong Engine: Init\n");
-    _ball.init(ball_size,speed);
-    
 }
 
-int PongEngine::update(UserInput input) {   
+ImpossEngine::~ImpossEngine()
+{
+
+}
+
+
+
+int ImpossEngine::update(UserInput input) {   
     //printf("Pong Engine: Update\n");
-    check_goal();  // checking for a goal is a priority 
+     // checking for a goal is a priority 
     _ball.update();
     
     // important to update paddles and ball before checking collisions so can
     // correct for it before updating the display
-    check_wall_collision();
-    check_paddle_collision();
-    
-    return _lives;
+    return 0;
 }
 
-void PongEngine::draw(N5110 &lcd) {
-    //printf("Pong Engine: Draw\n");
+//Used to set the level to zero
+void ImpossEngine::set_level_zero()
+{
+    level = 0;
+}
+
+//Draws the levels, obstacles and ball
+void ImpossEngine::draw(N5110 &lcd)
+{
     // draw the elements in the LCD buffer
-    // pitch
-    lcd.drawLine(0,0,WIDTH-1,0,1);  // top
-    lcd.drawLine(WIDTH-1,0,WIDTH-1,HEIGHT-1,1);  // back wall
-    lcd.drawLine(0,HEIGHT-1,WIDTH-1,HEIGHT-1,1); // bottom
-    _ball.draw(lcd);
+    // pitch   
     
-}
+    
+    if (level == 0){
+        _zero.draw(lcd);
+    }
 
-void PongEngine::check_wall_collision() {
-    //printf("Pong Engine: Check Wall Collision\n");
-    // read current ball attributes
-    Position2D ball_pos = _ball.get_pos();
-    Position2D ball_velocity = _ball.get_velocity();
-    int size = _ball.get_size();
-
-    // check if hit top wall
-    if (ball_pos.y <= 1) {  //  1 due to 1 pixel boundary
-        ball_pos.y = 1;  // bounce off ceiling without going off screen
-        ball_velocity.y = -ball_velocity.y;  // flip velocity
-    } else if (ball_pos.y + size >= (HEIGHT-1) ) {
-        // hit bottom
-        ball_pos.y = (HEIGHT-1) - size;  // stops ball going off screen
-        ball_velocity.y = -ball_velocity.y;    // flip velcoity 
-    } else if (ball_pos.x + size >= (WIDTH-1) ) {
-        // hit right wall
-        ball_pos.x = (WIDTH-1) - size;  // stops ball going off screen
-        ball_velocity.x = -ball_velocity.x;    // flip velcoity 
+    if (level == 1){
+        _one.draw(lcd);
     } 
-
-    // update ball parameters
-    _ball.set_velocity(ball_velocity);
-    _ball.set_pos(ball_pos);
-}
-
-void PongEngine::check_paddle_collision() {
-    //printf("Pong Engine: Check Paddle Collision\n");
-    // read current ball and paddle attributes
-    Position2D ball_pos = _ball.get_pos();
-    Position2D ball_velocity = _ball.get_velocity();
-      // paddle
-
-    // see if ball has hit the paddle by checking for overlaps
     
+    if (level == 2){
+        _two.draw(lcd);
+    }
+    
+    if (level == 3){
+         _three.draw(lcd);
+    }
+    
+    if (level == 4){
+         _four.draw(lcd);
+    }
+    
+    if (level == 5){
+         _five.draw(lcd);
+    }
+    
+    if (level == 6){
+        while(1){
+            lcd.clear();
+            lcd.printString("  Well done!  ",0,0);
+            lcd.printString(" You beat all ",0,1);
+            lcd.printString("of the levels!",0,2);
+            lcd.printString("Press reset to",0,3);
+            lcd.printString("  try again!  ",0,4);
+            
+            
+            lcd.refresh();
+            }    
+    }
+         
+    _ball.update();
+    
+    _ball.draw(lcd);
 
-    // write new attributes
-    _ball.set_velocity(ball_velocity);
-    _ball.set_pos(ball_pos);
 }
 
-void PongEngine::check_goal() {
-    //printf("Pong Engine: Check Goal\n");
-    Position2D ball_pos = _ball.get_pos();
-    int size = _ball.get_size();
-    int speed = abs(_ball.get_velocity().x);  // speed is magnitude of velocity
-    // check if ball position has gone off the left
-    if (ball_pos.x + size < 0) {
-        // reset the ball
-        _ball.init(size,speed);
-        _lives--;  // lose a life
-    }   
+//Updates all parameters, checks for collisions and checks to see if the level
+//has been completed
+
+
+//Checks every pixel around the ball, if any are "on"(1) then that is classed
+//as a collision
+void ImpossEngine::check_collision(N5110 &lcd)
+{
+    int _x = 0;
+    int _y = 0;
+    int i = 0;
+    
+    bool collision = false;
+    //check around ball to see if it has made contact with anything
+    
+    while(i < 3){
+        
+        i++;
+        
+        if(lcd.getPixel(x_pos + _x,y_pos + _y) == 1){
+            collision = true;
+            }
+            
+        _x ++;
+        
+    }
+    
+    i = 0;
+     
+    while(i < 3){
+        
+        i++;
+        
+        if(lcd.getPixel(x_pos + _x,y_pos + _y) == 1){
+            collision = true;
+            }
+            
+        _y ++;
+        
+    }
+    
+    i = 0;
+    
+    while(i < 3){
+        
+        i++;
+        
+        if(lcd.getPixel(x_pos + _x,y_pos + _y) == 1){
+            collision = true;
+            }
+            
+        _x --;
+        
+    }
+    
+    i = 0;
+    
+    while(i < 3){
+        
+        i++;
+        
+        if(lcd.getPixel(x_pos + _x,y_pos + _y) == 1){
+            collision = true;
+            }
+            
+        _y --;
+        
+    //death sequence
+    if(collision == true){
+        lcd.clear();
+        lcd.printString("  You died! ",0,2);
+        lcd.refresh();
+        
+       
+        
+        //resets ball to start of level if a collision has been detected
+        
+        }
+    }
 }
+
+//Checks to see if the ball has reached the end of the level, if it has,
+//increases the value of the level and sets the ball back to the beginning of
+//the level
